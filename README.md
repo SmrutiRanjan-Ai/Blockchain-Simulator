@@ -18,7 +18,7 @@ TXN_NUM = 1000
 
 # Network Parameters
 
-C_FAST = 100000000  # 100mbps = 100 * 10^6 bits
+C_FAST = 100000000  # 100mbps = 100 * 10^6 bits \n
 C_SLOW = 5000000  # 5mbps = 5 * 10^6 bits
 D_CONSTANT = 96000  # 96 Kilobits Queueing Delay in bits
 SLOW_PROBABILITY = 0.5  # Z
