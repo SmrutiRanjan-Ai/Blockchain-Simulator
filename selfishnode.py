@@ -78,8 +78,6 @@ class SelfishNode(Node):
 
                     event = Event(timestamp, [self.check_mempool, timestamp])
                     des.heapq.heappush(des.q, event)
-                    ''' After publishing reinitialize private chain'''
-                    self.on_init(timestamp)
 
                 if d_prev == 2:
                     ''' Assignment Part A Section 2
