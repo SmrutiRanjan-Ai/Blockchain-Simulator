@@ -116,6 +116,8 @@ class StubbornNode(Node):
 
                     event = Event(timestamp, [self.check_mempool, timestamp])
                     des.heapq.heappush(des.q, event)
+                elif d_prev==0 and block.header['creator']==99:
+                    pass
                 else:
                     ''' WHen lead is 0 and honest miners find one block reinitialize private chain'''
                     self.on_init(timestamp)
