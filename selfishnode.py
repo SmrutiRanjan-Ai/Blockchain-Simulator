@@ -29,8 +29,8 @@ class SelfishNode(Node):
     def on_init(self, timestamp):
         public_chain = self.blockchain.tree.longest_chain()
         self.chain = public_chain
-        self.private_branch = []
-        self.private_len = 0
+        self.pending_block=None
+        self.busy=False
         if g.mining_log:
             print(timestamp, "I am Initiated")
 
@@ -68,7 +68,7 @@ class SelfishNode(Node):
                     ''' Assignment Part A Section 1 
                     Lead is 1 and honest miners find one block. publish the private block
                     '''
-                    for i in self.chain:
+                    for i in self.chain[-1:]:
                         if i.header['blkid'] not in public_chain_blkid:
                             status, code = self.blockchain.add_block_to_chain(i, timestamp)
                             print(timestamp, d_prev, "99 added private block to public", i, status, code)
@@ -84,7 +84,7 @@ class SelfishNode(Node):
                     Lead is 2 and honest miners find one block. publish only  those blocks that 
                     corresponds to the received honest block
                     '''
-                    for i in self.chain:
+                    for i in self.chain[-2:]:
                         if i.header['blkid'] not in public_chain_blkid:
                             status, code = self.blockchain.add_block_to_chain(i, timestamp)
                             print(timestamp, d_prev, "99 added private block", block, status, code)
@@ -115,12 +115,16 @@ class SelfishNode(Node):
                 else:
                     ''' WHen lead is 0 and honest miners find one block reinitialize private chain'''
                     self.on_init(timestamp)
+                    event = Event(timestamp, [self.check_mempool, timestamp])
+                    des.heapq.heappush(des.q, event)
                 break
 
     def end_broadcast(self, timestamp):
-        for i in self.private_branch:
-            for n in g.node_list:
-                n.blockchain.add_block_to_chain(i, timestamp)
+        public_chain = self.blockchain.tree.longest_chain()
+        for i in self.chain:
+            if i not in public_chain:
+                for n in g.node_list:
+                    n.blockchain.add_block_to_chain(i, timestamp)
 
     def add_block(self, timestamp, blkid):
         ''' Add a block after mining'''
@@ -153,3 +157,27 @@ class SelfishNode(Node):
                 self.completed.add(i)
         for i in temp:
             self.mempool.add(i)
+    def create_block(self, timestamp, chain=None):
+        """Selection of transaction and Mining of block happens here"""
+        if chain is None:
+            chain = self.blockchain.tree.longest_chain()
+        new_blkid = g.blkid_gen()
+        mem_pool_list = list(self.mempool)
+        conf_trans_list = self.blockchain.get_chain_trans_list(chain)
+        last_block = chain[-1]
+        txn_list = [i for i in mem_pool_list if i not in conf_trans_list]
+        txn_list = [i for i in txn_list if self.verify_txn(conf_trans_list, i)]
+        prev_hash = last_block.header['block_hash']
+        new_timestamp = random.exponential(scale=self.hash_mean, size=1)[0] + timestamp
+        if txn_list:
+            if g.mining_log_detail:
+                print(timestamp, "\tmining of ", new_blkid, " started by\t", self.id, "\t")
+
+            status, new_block = self.blockchain.create_block(blkid=new_blkid, list_trans=txn_list[0:100], \
+                                                             timestamp=new_timestamp, version=g.VERSION,
+                                                             creator=self.id, prev_hash=prev_hash)
+            if status:
+                self.busy = True
+                self.pending_block = new_block
+                event = Event(new_timestamp, [self.add_block, new_timestamp, new_block.header['blkid']])
+                des.heapq.heappush(des.q, event)

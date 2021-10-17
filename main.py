@@ -79,26 +79,15 @@ while des.q:
 
 if g.selfish and g.attackers_add_end_blocks:
     selfish_node=g.node_list[-1]
-    if selfish_node.private_branch:
-        selfish_node.end_broadcast(t)
+    selfish_node.end_broadcast(t)
 
 # visualization
 for i in g.node_list:
     print(i)
     i.blockchain.visualize_tree()
 
-# debug only
-for i in g.node_list:
-    chain = i.blockchain.tree.longest_chain()
-    chain_list=i.blockchain.get_chain_trans_list(chain)
-    if i.mempool:
-        for j in i.mempool:
-            if j in chain:
-                print(j, True)
-            else:
-                print(j, False)
-    else:
-        print(i, "Mempool empty")
+
+
 
 
 #block percentage in Main Chain
