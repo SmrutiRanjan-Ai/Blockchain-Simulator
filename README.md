@@ -1,7 +1,6 @@
-# 765-A2-Final
-Project Member:
-Smruti Ranjan Behera : 213050077
-Saurish
+
+Smruti Ranjan Behera 
+Saurish D
 Hrithik
 
 Run main.py
